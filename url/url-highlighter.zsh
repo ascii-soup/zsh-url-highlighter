@@ -10,7 +10,7 @@ _zsh_highlight_url_highlighter_predicate()
 _zsh_highlight_url_highlighter()
 {
   setopt localoptions extendedglob
-  _zsh_highlight_url_highlighter_loop "$BUFFER" "(http://[^\n'\"]*) "
+  _zsh_highlight_url_highlighter_loop "$BUFFER" "(^https?://[^\n'\"]*) "
 }
 
 _zsh_highlight_url_highlighter_loop()
