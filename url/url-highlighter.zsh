@@ -8,13 +8,8 @@ typeset -gA _ZSH_HIGHLIGHT_URL_HIGHLIGHTER_CACHE
 # Set the default timeout
 : ${ZSH_HIGHLIGHT_URL_HIGHLIGHTER_TIMEOUT:=0.25}
 
-# Bit of a hack - attach a precmd hook function
-# to clear the cache with a new command line
-if [[ $#precmd_functions > 0 ]]; then
-  precmd_functions+=(_zsh_highlight_url_clear_cache)
-else
-  precmd_functions=(precmd _zsh_highlight_url_clear_cache)
-fi
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd _zsh_highlight_url_clear_cache
 
 # Clears the url highlighter cache
 _zsh_highlight_url_clear_cache()
@@ -31,17 +26,17 @@ _zsh_highlight_url_highlighter_predicate()
 
 _zsh_highlight_url_highlighter()
 {
-  local match mbegin mend
-  local start end
+  local -a match mbegin mend
+  local -a MATCH MBEGIN MEND
+  local -a matches match matches_starts matches_ends
+  local start end match_count
+  local status_code
   
   local remaining_buffer="$BUFFER"
   local buffer_length=$#BUFFER
   local offset=0
-  local exitCode
   
-  local -a matches match matches_starts matches_ends status_code
-  
-  until [[ "$remaining_buffer" == "" ]]; do
+  until [[ -z "$remaining_buffer" ]]; do
     if [[ "$remaining_buffer" =~ '(https?://([^ ]+[.])+([^ ]+)) ' ]]; then
       start=$((mbegin[1]-1))
       end=$mend[1]
@@ -55,10 +50,13 @@ _zsh_highlight_url_highlighter()
     fi
   done
 
-  for ((i=1; $i <= $#matches; i++)); do
+  local match_count=$#matches
+  local i
+  
+  for ((i=1; $i <= $match_count; i++)); do
     match=$matches[$i]
     # debug "Match: $match"
-    if [[ "$_ZSH_HIGHLIGHT_URL_HIGHLIGHTER_CACHE[$match]" != "" ]]; then
+    if [[ -n "$_ZSH_HIGHLIGHT_URL_HIGHLIGHTER_CACHE[$match]" ]]; then
       # debug 'Cache hit'
       status_code=$_ZSH_HIGHLIGHT_URL_HIGHLIGHTER_CACHE[$match]
     else
@@ -68,7 +66,7 @@ _zsh_highlight_url_highlighter()
       # Cache the result so we don't have to check again on this line
       _ZSH_HIGHLIGHT_URL_HIGHLIGHTER_CACHE[$match]=$status_code
     fi
-    if [[ "$status_code" -eq "200" ]]; then
+    if [[ "$status_code" == "200" ]]; then
       region_highlight+=("$matches_starts[$i] $matches_ends[$i] ${ZSH_HIGHLIGHT_STYLES[url-good]}")
     else
       region_highlight+=("$matches_starts[$i] $matches_ends[$i] ${ZSH_HIGHLIGHT_STYLES[url-bad]}")
