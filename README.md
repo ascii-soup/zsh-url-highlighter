@@ -1,7 +1,7 @@
 # zsh-url-highlighter
 
 A plugin for [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
-that turns URLs green if they respond with a "good"* status, and red otherwise.
+that turns URLs green if they respond with a "good"** status, and red otherwise.
 Useful for checking URL typos.
 
 ## Installation
